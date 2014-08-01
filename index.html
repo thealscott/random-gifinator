@@ -12,24 +12,23 @@
             margin:0;
             overflow:hidden;
         }
-
-        img.wide {
-            height:100vh;
-            -webkit-transform:translateX(-50%);
-            margin-left:50%;
+        img {
+            position:relative;
         }
 
-        img.tall {
+        .static {
             width:100vw;
-            -webkit-transform:translateY(-50%);
-            margin-top:50%;
+            height:100vh;
+            position:absolute;
+            top:0;
+            left:0;
         }
-
         </style>
     </head>
     <body>
         <main>
-            <img />
+            <img class="gif" />
+            <img class="static" src="/images/static.gif"/>
         </main>
 
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
@@ -108,9 +107,15 @@
         }
 
         function displayGif(filename) {
-            var $img = $('img');
-            $img.attr('src', '/images/'+filename);
+            var $img = $('.gif');         
+
+            $img.attr('src', '/images/gifs/' + filename);
             resizeImage($img);
+
+            $('.static').show();
+            setTimeout(function(){
+                $('.static').hide();
+            }, 200);
         }
 
         function resizeImage($img) {   
@@ -126,15 +131,29 @@
 
                 var imageAspect = originalImageWidth / originalImageHeight;
                 var windowAspect = $(window).width()/$(window).height();
-
-                console.log(windowAspect);
-                console.log(imageAspect);
             
                 if (windowAspect > imageAspect) {
-                    $img.removeClass().addClass('tall');
+                    $img.width($(window).width()).height('auto');
+                    // shift the element up
+                    var height = $img.height();
+                    var shift = (height - $(window).height()) / 2;
+                    if (shift < 0) shift = 0;
+                    $img.css({
+                        "top" : -shift,
+                        "left" : 0
+                    });
                 }
                 else {
-                    $img.removeClass().addClass('wide');
+
+                    $img.height($(window).height()).width('auto');
+                    // shift the element left
+                    var width = $img.width();
+                    var shift = (width -  $(window).width()) / 2;
+                    if (shift < 0) shift = 0;
+                    $img.css({
+                        "left" : -shift,
+                        "top" : 0
+                    });
                 }
             }
         }
