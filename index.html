@@ -1,0 +1,114 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Random Gifinator</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="css/main.css">
+    </head>
+    <body>
+        <main>
+            GIFS!
+
+            <span></span>
+
+            <img />
+        </main>
+
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+        <script>
+        
+
+        $(document).ready(function(){
+            $.ajax({
+                url : '/list_files.php',
+                dataType : 'json',
+                success: function(data, status, jqXHR){
+                    window.gifList = data;
+
+                    window.featuredGif =  window.gifList[0];
+
+                    showRandomGif();
+                    cycleGifs();
+                    
+                }
+            });
+
+            // we poll the server to unify our clocks and avoid inconsitency between open browsers
+            checkServerTime();
+        });
+
+        function checkServerTime() {
+            $.ajax({
+                url : '/server_time.php',
+                dataType : 'json',
+                success: function(data, status, jqXHR){
+                    //upon successfully polling the server, we clear our own time counter so we can resync with the server.
+                    clearInterval(window.timestampInterval);
+
+                    window.serverTime = new Date(data.date);
+                    window.serverTimeStamp = window.serverTime.getTime()/1000;
+
+                    //after we get the date and convert it to a timestamp in unix seconds, we now start increasing it ourselves to avoid constantly polling the server. 
+                    updateTimeStamp();
+
+                    //debug
+                    console.log('check server time');
+                    $('span').html(serverTimeStamp);
+                }
+            });
+        }
+
+        function updateTimeStamp() {
+            window.timestampInterval = setInterval(function(){
+                // every second we increase the timestamp by 1
+                window.serverTimeStamp += 1;
+
+                //debug
+                $('span').html(serverTimeStamp);
+
+                // after 10 minutes resync with server 
+                if (window.serverTimeStamp%(60*10) == 0) {
+                    checkServerTime();
+                }
+                
+                if (window.serverTimeStamp%(30) == 0) {
+                    displayGif(window.featuredGif);
+                    clearInterval(window.cycleGifsInterval);
+
+                    //debug
+                    console.log('featured gif showing');
+                    $('main').css('background', 'red');
+
+                    setTimeout(function(){
+                        //debug
+                        $('main').css('background', 'none');
+
+
+                        showRandomGif();
+                        cycleGifs();
+                    }, 10000);
+                }                
+            }, 1000);
+        }
+
+        function cycleGifs() {
+            window.cycleGifsInterval = setInterval(showRandomGif, 5000);
+        }
+
+        function showRandomGif() {
+            var randomGif = window.gifList[Math.floor(Math.random() * window.gifList.length)];
+            console.log(randomGif);
+            displayGif(randomGif);
+        }
+
+        function displayGif(filename) {
+            $('img').attr('src', '/images/'+filename);
+        }
+        </script>
+    </body>
+</html>
