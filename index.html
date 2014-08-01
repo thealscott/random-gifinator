@@ -7,34 +7,51 @@
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="stylesheet" href="css/main.css">
+        <style>
+        html, body {
+            margin:0;
+            overflow:hidden;
+        }
+
+        img.wide {
+            height:100vh;
+            -webkit-transform:translateX(-50%);
+            margin-left:50%;
+        }
+
+        img.tall {
+            width:100vw;
+            -webkit-transform:translateY(-50%);
+            margin-top:50%;
+        }
+
+        </style>
     </head>
     <body>
         <main>
-            GIFS!
-
-            <span></span>
-
             <img />
         </main>
 
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-
         <script>
-        
-
         $(document).ready(function(){
+            //if we pass it a hash, it's assumed that should be the featured gif name
+            if (window.location.hash) {
+                var hash = window.location.hash.substring(1); //Puts hash in variable, and removes the # character
+                window.featuredGif = hash + '.gif';
+            } 
+
             $.ajax({
                 url : '/list_files.php',
                 dataType : 'json',
                 success: function(data, status, jqXHR){
                     window.gifList = data;
 
-                    window.featuredGif =  window.gifList[0];
+                    // if the featured gif we pass is not actually available, we default to the first in the folder
+                    if ($.inArray(window.featuredGif, window.gifList) == -1) window.featuredGif = window.gifList[0];
 
                     showRandomGif();
                     cycleGifs();
-                    
                 }
             });
 
@@ -55,10 +72,6 @@
 
                     //after we get the date and convert it to a timestamp in unix seconds, we now start increasing it ourselves to avoid constantly polling the server. 
                     updateTimeStamp();
-
-                    //debug
-                    console.log('check server time');
-                    $('span').html(serverTimeStamp);
                 }
             });
         }
@@ -68,27 +81,16 @@
                 // every second we increase the timestamp by 1
                 window.serverTimeStamp += 1;
 
-                //debug
-                $('span').html(serverTimeStamp);
-
-                // after 10 minutes resync with server 
-                if (window.serverTimeStamp%(60*10) == 0) {
+                // after 5 minutes resync with server 
+                if (window.serverTimeStamp%(60*5) == 0) {
                     checkServerTime();
                 }
                 
-                if (window.serverTimeStamp%(30) == 0) {
+                if (window.serverTimeStamp%(60) == 0) {
                     displayGif(window.featuredGif);
                     clearInterval(window.cycleGifsInterval);
 
-                    //debug
-                    console.log('featured gif showing');
-                    $('main').css('background', 'red');
-
                     setTimeout(function(){
-                        //debug
-                        $('main').css('background', 'none');
-
-
                         showRandomGif();
                         cycleGifs();
                     }, 10000);
@@ -102,12 +104,39 @@
 
         function showRandomGif() {
             var randomGif = window.gifList[Math.floor(Math.random() * window.gifList.length)];
-            console.log(randomGif);
             displayGif(randomGif);
         }
 
         function displayGif(filename) {
-            $('img').attr('src', '/images/'+filename);
+            var $img = $('img');
+            $img.attr('src', '/images/'+filename);
+            resizeImage($img);
+        }
+
+        function resizeImage($img) {   
+            var newimage = new Image();
+            var originalImageWidth;
+            var originalImageHeight;
+            
+            newimage.src = $img.attr('src');
+            newimage.onload = function()
+            {
+                originalImageWidth = this.naturalWidth;
+                originalImageHeight = this.naturalHeight;
+
+                var imageAspect = originalImageWidth / originalImageHeight;
+                var windowAspect = $(window).width()/$(window).height();
+
+                console.log(windowAspect);
+                console.log(imageAspect);
+            
+                if (windowAspect > imageAspect) {
+                    $img.removeClass().addClass('tall');
+                }
+                else {
+                    $img.removeClass().addClass('wide');
+                }
+            }
         }
         </script>
     </body>
