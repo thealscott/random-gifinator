@@ -108,14 +108,10 @@
 
         function displayGif(filename) {
             var $img = $('.gif');         
+            $('.static').show();
 
             $img.attr('src', '/images/gifs/' + filename);
             resizeImage($img);
-
-            $('.static').show();
-            setTimeout(function(){
-                $('.static').hide();
-            }, 200);
         }
 
         function resizeImage($img) {   
@@ -126,6 +122,10 @@
             newimage.src = $img.attr('src');
             newimage.onload = function()
             {
+                setTimeout(function(){
+                    $('.static').hide();
+                }, 150);
+
                 originalImageWidth = this.naturalWidth;
                 originalImageHeight = this.naturalHeight;
 
