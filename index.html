@@ -46,8 +46,8 @@
                 success: function(data, status, jqXHR){
                     window.gifList = data;
 
-                    // if the featured gif we pass is not actually available, we default to the first in the folder
-                    if ($.inArray(window.featuredGif, window.gifList) == -1) window.featuredGif = window.gifList[0];
+                    // if the featured gif we pass is not actually available, we default to the second in the folder (to avoid grabbing .DSstore)
+                    if ($.inArray(window.featuredGif, window.gifList) == -1) window.featuredGif = window.gifList[1];
 
                     showRandomGif();
                     cycleGifs();
@@ -110,7 +110,7 @@
             var randomGif = window.gifList[Math.floor(Math.random() * window.gifList.length)];
 
             // if the list returns something without a .gif extension, try again. 
-            if (randomGif.indexOf(".gif") == -1 ) {
+            while (randomGif.indexOf(".gif") == -1 ) {
                 randomGif = window.gifList[Math.floor(Math.random() * window.gifList.length)];
             }
 
