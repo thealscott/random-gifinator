@@ -64,7 +64,7 @@
                 dataType : 'json',
                 success: function(data, status, jqXHR){
                     //upon successfully polling the server, we clear our own time counter so we can resync with the server.
-                    clearInterval(window.timestampInterval);
+                    clearInterval(window.timeStampInterval);
 
                     window.serverTime = new Date(data.date);
                     window.serverTimeStamp = window.serverTime.getTime()/1000;
@@ -76,7 +76,7 @@
         }
 
         function updateTimeStamp() {
-            window.timestampInterval = setInterval(function(){
+            window.timeStampInterval = setInterval(function(){
                 // every second we increase the timestamp by 1
                 window.serverTimeStamp += 1;
 
@@ -85,16 +85,21 @@
                     checkServerTime();
                 }
                 
+                // every minute sync all displays to show featured gif
                 if (window.serverTimeStamp%(60) == 0) {
-                    displayGif(window.featuredGif);
-                    clearInterval(window.cycleGifsInterval);
-
-                    setTimeout(function(){
-                        showRandomGif();
-                        cycleGifs();
-                    }, 10000);
+                    syncFeaturedGifs();
                 }                
             }, 1000);
+        }
+
+        function syncFeaturedGifs() {
+            displayGif(window.featuredGif);
+            clearInterval(window.cycleGifsInterval);
+
+            setTimeout(function(){
+                showRandomGif();
+                cycleGifs();
+            }, 10000);
         }
 
         function cycleGifs() {
@@ -103,18 +108,26 @@
 
         function showRandomGif() {
             var randomGif = window.gifList[Math.floor(Math.random() * window.gifList.length)];
+
+            // if the list returns something without a .gif extension, try again. 
+            if (randomGif.indexOf(".gif") == -1 ) {
+                randomGif = window.gifList[Math.floor(Math.random() * window.gifList.length)];
+            }
+
             displayGif(randomGif);
         }
 
         function displayGif(filename) {
-            var $img = $('.gif');         
-            $('.static').show();
+            var $img = $('.gif'); 
 
+            // show static transition between images, will display for loadtime + 150ms        
+            $('.static').show();            
+            
             $img.attr('src', '/images/gifs/' + filename);
-            resizeImage($img);
+            prepareImage($img);
         }
 
-        function resizeImage($img) {   
+        function prepareImage($img) {   
             var newimage = new Image();
             var originalImageWidth;
             var originalImageHeight;
@@ -122,10 +135,12 @@
             newimage.src = $img.attr('src');
             newimage.onload = function()
             {
+                // hide static transition now that image is loaded
                 setTimeout(function(){
                     $('.static').hide();
                 }, 150);
 
+                // resize/reposition image based on aspect ratio relative to viewport aspect to make sure it is always fullscreen and centered
                 originalImageWidth = this.naturalWidth;
                 originalImageHeight = this.naturalHeight;
 
