@@ -40,19 +40,17 @@
                 window.featuredGif = hash + '.gif';
             } 
 
-            $.ajax({
-                url : '/list_files.php',
-                dataType : 'json',
-                success: function(data, status, jqXHR){
-                    window.gifList = data;
+            var initCycle = function(data, status, jqXHR){
+                window.gifList = data;
 
-                    // if the featured gif we pass is not actually available, we default to the second in the folder (to avoid grabbing .DSstore)
-                    if ($.inArray(window.featuredGif, window.gifList) == -1) window.featuredGif = window.gifList[1];
+                // if the featured gif we pass is not actually available, we default to the second in the folder (to avoid grabbing .DSstore)
+                if ($.inArray(window.featuredGif, window.gifList) == -1) window.featuredGif = window.gifList[1];
 
-                    showRandomGif();
-                    cycleGifs();
-                }
-            });
+                showRandomGif();
+                cycleGifs();
+            }
+
+            checkServerDataList(initCycle);
 
             // we poll the server to unify our clocks and avoid inconsitency between open browsers
             checkServerTime();
@@ -88,8 +86,29 @@
                 // every minute sync all displays to show featured gif
                 if (window.serverTimeStamp%(60) == 0) {
                     syncFeaturedGifs();
-                }                
+                }
+
+                // every 32 minutes we reload the datalist to make sure newly added gifs are in rotation
+                if (window.serverTimeStamp%(60*32) == 0) {
+                    checkServerDataList();
+                }              
             }, 1000);
+        }
+
+        function checkServerDataList(onSuccess) {
+            console.log('checkServerDataList');
+            var onSuccess = onSuccess || function(data, status, jqXHR){
+                window.gifList = data;
+
+                // if the featured gif we pass is not actually available, we default to the second in the folder (to avoid grabbing .DSstore)
+                if ($.inArray(window.featuredGif, window.gifList) == -1) window.featuredGif = window.gifList[1];
+            }
+
+            $.ajax({
+                url : '/list_files.php',
+                dataType : 'json',
+                success: onSuccess
+            });
         }
 
         function syncFeaturedGifs() {
