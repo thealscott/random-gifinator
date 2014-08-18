@@ -88,8 +88,8 @@
                     syncFeaturedGifs();
                 }
 
-                // every 32 minutes we reload the datalist to make sure newly added gifs are in rotation
-                if (window.serverTimeStamp%(60*32) == 0) {
+                // every 30 min + 10seconds (to avoid overlapping with other updates) we reload the datalist to make sure newly added gifs are in rotation
+                if (window.serverTimeStamp%((60*30)+10) == 0) {
                     checkServerDataList();
                 }              
             }, 1000);
