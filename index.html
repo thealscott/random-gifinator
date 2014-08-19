@@ -40,21 +40,51 @@
                 window.featuredGif = hash + '.gif';
             } 
 
+            // we define the callback method for when we get the file list from the server. 
             var initCycle = function(data, status, jqXHR){
-                window.gifList = data;
-
-                // if the featured gif we pass is not actually available, we default to the second in the folder (to avoid grabbing .DSstore)
-                if ($.inArray(window.featuredGif, window.gifList) == -1) window.featuredGif = window.gifList[1];
-
+                setGifLists(data);
                 showRandomGif();
                 cycleGifs();
             }
 
-            checkServerDataList(initCycle);
-
             // we poll the server to unify our clocks and avoid inconsitency between open browsers
             checkServerTime();
+
+            // we poll the server to get the list of available files, and initialise the image cycle
+            checkServerDataList(initCycle);
         });
+
+        // general utilities
+        function objectSize (obj) {
+            var size = 0, key;
+            for (key in obj) {
+                if (obj.hasOwnProperty(key)) size++;
+            }
+            return size;
+        };
+
+        function randomElement (obj) {
+            var keys = Object.keys(obj)
+            return obj[keys[ keys.length * Math.random() << 0]];
+        };
+
+        function randomArrayElement (array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }   
+
+        // app specific methods
+        function setGifLists(data) {
+            window.gifLists = data;
+            window.activeGifList = randomElement(data);
+            window.combinedList = [];
+
+            $.each(window.gifLists, function(index, value){
+                window.combinedList = window.combinedList.concat(value);
+            });
+
+            // if the featured gif we pass is not actually available, we default to the second in the folder (to avoid grabbing .DSstore)
+            if ($.inArray(window.featuredGif, window.combinedList) == -1) window.featuredGif = window.combinedList[1];
+        }
 
         function checkServerTime() {
             $.ajax({
@@ -79,29 +109,26 @@
                 window.serverTimeStamp += 1;
 
                 // after 5 minutes resync with server 
-                if (window.serverTimeStamp%(60*5) == 0) {
+                if (window.serverTimeStamp % (60 * 5) == 0) {
                     checkServerTime();
                 }
                 
                 // every minute sync all displays to show featured gif
-                if (window.serverTimeStamp%(60) == 0) {
+                if (window.serverTimeStamp % (60) == 0) {
                     syncFeaturedGifs();
+                    setActiveList();
                 }
 
                 // every 30 min + 10seconds (to avoid overlapping with other updates) we reload the datalist to make sure newly added gifs are in rotation
-                if (window.serverTimeStamp%((60*30)+10) == 0) {
+                if (window.serverTimeStamp % ((60 * 30) + 10) == 0) {
                     checkServerDataList();
                 }              
             }, 1000);
         }
 
         function checkServerDataList(onSuccess) {
-            console.log('checkServerDataList');
             var onSuccess = onSuccess || function(data, status, jqXHR){
-                window.gifList = data;
-
-                // if the featured gif we pass is not actually available, we default to the second in the folder (to avoid grabbing .DSstore)
-                if ($.inArray(window.featuredGif, window.gifList) == -1) window.featuredGif = window.gifList[1];
+                setGifLists(data);
             }
 
             $.ajax({
@@ -109,6 +136,22 @@
                 dataType : 'json',
                 success: onSuccess
             });
+        }
+
+        function setActiveList() {
+            // we roll a rand(100) and then use that to decide if we want to use a random sub-list or the combined list til the next sync
+
+            var roll = Math.floor((Math.random() * 100) + 1);
+            console.log(roll);
+
+            if (roll > 50) {
+                window.activeGifList = randomElement(window.gifLists);
+            }
+            else {
+                window.activeGifList = window.combinedList;
+            }
+
+            console.log(window.activeGifList);
         }
 
         function syncFeaturedGifs() {
@@ -126,11 +169,11 @@
         }
 
         function showRandomGif() {
-            var randomGif = window.gifList[Math.floor(Math.random() * window.gifList.length)];
+            var randomGif = randomArrayElement(window.activeGifList);
 
             // if the list returns something without a .gif extension, try again. 
             while (randomGif.indexOf(".gif") == -1 ) {
-                randomGif = window.gifList[Math.floor(Math.random() * window.gifList.length)];
+                randomGif = randomArrayElement(window.activeGifList);
             }
 
             displayGif(randomGif);
@@ -143,10 +186,10 @@
             $('.static').show();            
             
             $img.attr('src', '/images/gifs/' + filename);
-            prepareImage($img);
+            displayImage($img);
         }
 
-        function prepareImage($img) {   
+        function displayImage($img) {   
             var newimage = new Image();
             var originalImageWidth;
             var originalImageHeight;
