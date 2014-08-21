@@ -36,8 +36,7 @@
         $(document).ready(function(){
             //if we pass it a hash, it's assumed that should be the featured gif name
             if (window.location.hash) {
-                var hash = window.location.hash.substring(1); //Puts hash in variable, and removes the # character
-                window.featuredGif = hash + '.gif';
+                window.featuredGif = window.location.hash.substring(1); //Puts hash in variable, and removes the # character
             } 
 
             // we define the callback method for when we get the file list from the server. 
@@ -114,16 +113,13 @@
             window.timeStampInterval = setInterval(function(){
                 // every second we increase the timestamp by 1
                 window.serverTimeStamp += 1;
-
-                // after 5 minutes resync with server 
-                if (window.serverTimeStamp % (60 * 5) == 0) {
-                    checkServerTime();
-                }
                 
-                // every minute sync all displays to show featured gif
+                // every minute sync all displays to show featured gif and resync time with the server
                 if (window.serverTimeStamp % (60) == 0) {
                     syncFeaturedGifs();
                     setActiveList();
+
+                    checkServerTime();
                 }
 
                 // every 30 min + 10seconds (to avoid overlapping with other updates) we reload the datalist to make sure newly added gifs are in rotation
@@ -158,19 +154,20 @@
         }
 
         function syncFeaturedGifs() {
-            var filePath = 'images/gifs/' + window.featuredGif;
+            // var filePath = 'images/gifs/' + window.featuredGif + (Math.floor(Math.random() * window.gifLists.letters.length)) + '.gif';
+            var filePath = 'images/gifs/' + window.featuredGif + '.gif';
             
-            displayGif(filePath);
+            setGif(filePath);
             clearInterval(window.cycleGifsInterval);
 
             setTimeout(function(){
                 showRandomGif();
                 cycleGifs();
-            }, 10000);
+            }, 15000);
         }
 
         function cycleGifs() {
-            window.cycleGifsInterval = setInterval(showRandomGif, 5000);
+            window.cycleGifsInterval = setInterval(showRandomGif, 10000);
         }
 
         function showRandomGif() {
@@ -184,10 +181,10 @@
                     filePath = 'images/gifs/' + key + '/' + randomGif;
             }
 
-            displayGif(filePath);
+            setGif(filePath);
         }
 
-        function displayGif(filepath) {
+        function setGif(filepath) {
             var $img = $('.gif'); 
 
             // show static transition between images, will display for loadtime + 150ms        
