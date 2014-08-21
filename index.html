@@ -36,11 +36,11 @@
         $(document).ready(function(){
             //if we pass it a hash, it's assumed that should be the featured gif name
             if (window.location.hash) {
-                window.featuredGif = window.location.hash.substring(1); //Puts hash in variable, and removes the # character
+                window.featuredLetter = window.location.hash.substring(1); //Puts hash in variable, and removes the # character
             } 
 
             // we define the callback method for when we get the file list from the server. 
-            var initCycle = function(data, status, jqXHR){
+            var initCycle = function(data, status, jqXHR) {
                 setGifLists(data);
                 showRandomGif();
                 cycleGifs();
@@ -88,8 +88,9 @@
         *******/
 
         function setGifLists(data) {
-            window.gifLists = data;
-            window.activeGifListKey = randomKey(data);
+            window.gifLists = data.gifs;
+            window.letterLists = data.letters;
+            window.activeGifListKey = randomKey(data.gifs);
         }
 
         function checkServerTime() {
@@ -116,7 +117,7 @@
                 
                 // every minute sync all displays to show featured gif and resync time with the server
                 if (window.serverTimeStamp % (60) == 0) {
-                    syncFeaturedGifs();
+                    syncFeaturedLetters();
                     setActiveList();
 
                     checkServerTime();
@@ -145,7 +146,7 @@
             // we roll a rand(100) and then use that to decide if we want to use a random sub-list or the combined list til the next sync
             var roll = Math.floor((Math.random() * 100) + 1);
 
-            if (roll > 50) {
+            if (roll > 75) {
                 window.activeGifListKey = randomKey(window.gifLists);
             }
             else {
@@ -153,11 +154,13 @@
             }
         }
 
-        function syncFeaturedGifs() {
-            // var filePath = 'images/gifs/' + window.featuredGif + (Math.floor(Math.random() * window.gifLists.letters.length)) + '.gif';
-            var filePath = 'images/gifs/' + window.featuredGif + '.gif';
+        function syncFeaturedLetters() {
+            // from within the featured letter folder, we pick a random letter
+            var randomLetter = randomArrayElement(window.letterLists[window.featuredLetter]),
+                filePath = 'images/letters/'+ window.featuredLetter +'/'+ randomLetter;
             
             setGif(filePath);
+
             clearInterval(window.cycleGifsInterval);
 
             setTimeout(function(){
@@ -226,7 +229,6 @@
                     });
                 }
                 else {
-
                     $img.height($(window).height()).width('auto');
                     // shift the element left
                     var width = $img.width();
