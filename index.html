@@ -54,7 +54,12 @@
             checkServerDataList(initCycle);
         });
 
-        // general utilities
+        /*******
+        
+        General utilities
+        
+        *******/
+        
         function objectSize (obj) {
             var size = 0, key;
             for (key in obj) {
@@ -68,22 +73,24 @@
             return obj[keys[ keys.length * Math.random() << 0]];
         };
 
+        function randomKey (obj) {
+            var keys = Object.keys(obj)
+            return keys[ keys.length * Math.random() << 0];
+        };
+
         function randomArrayElement (array) {
             return array[Math.floor(Math.random() * array.length)];
         }   
 
-        // app specific methods
+        /*******
+        
+        App specific methods
+        
+        *******/
+
         function setGifLists(data) {
             window.gifLists = data;
-            window.activeGifList = randomElement(data);
-            window.combinedList = [];
-
-            $.each(window.gifLists, function(index, value){
-                window.combinedList = window.combinedList.concat(value);
-            });
-
-            // if the featured gif we pass is not actually available, we default to the second in the folder (to avoid grabbing .DSstore)
-            if ($.inArray(window.featuredGif, window.combinedList) == -1) window.featuredGif = window.combinedList[1];
+            window.activeGifListKey = randomKey(data);
         }
 
         function checkServerTime() {
@@ -140,18 +147,14 @@
 
         function setActiveList() {
             // we roll a rand(100) and then use that to decide if we want to use a random sub-list or the combined list til the next sync
-
             var roll = Math.floor((Math.random() * 100) + 1);
-            console.log(roll);
 
             if (roll > 50) {
-                window.activeGifList = randomElement(window.gifLists);
+                window.activeGifListKey = randomKey(window.gifLists);
             }
             else {
-                window.activeGifList = window.combinedList;
+                window.activeGifListKey = null;
             }
-
-            console.log(window.activeGifList);
         }
 
         function syncFeaturedGifs() {
@@ -169,23 +172,26 @@
         }
 
         function showRandomGif() {
-            var randomGif = randomArrayElement(window.activeGifList);
-
-            // if the list returns something without a .gif extension, try again. 
-            while (randomGif.indexOf(".gif") == -1 ) {
-                randomGif = randomArrayElement(window.activeGifList);
+            if (window.activeGifListKey != null) {
+                var randomGif = randomArrayElement(window.gifLists[window.activeGifListKey]),
+                    filePath = 'images/gifs/' + window.activeGifListKey + '/' + randomGif;
+            }
+            else {
+                var key = randomKey(window.gifLists),
+                    randomGif = randomArrayElement(window.gifLists[key]),
+                    filePath = 'images/gifs/' + key + '/' + randomGif;
             }
 
-            displayGif(randomGif);
+            displayGif(filePath);
         }
 
-        function displayGif(filename) {
+        function displayGif(filepath) {
             var $img = $('.gif'); 
 
             // show static transition between images, will display for loadtime + 150ms        
             $('.static').show();            
             
-            $img.attr('src', '/images/gifs/' + filename);
+            $img.attr('src', filepath);
             displayImage($img);
         }
 
