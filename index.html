@@ -59,7 +59,7 @@
         General utilities
         
         *******/
-        
+
         function objectSize (obj) {
             var size = 0, key;
             for (key in obj) {
@@ -158,7 +158,9 @@
         }
 
         function syncFeaturedGifs() {
-            displayGif(window.featuredGif);
+            var filePath = 'images/gifs/' + window.featuredGif;
+            
+            displayGif(filePath);
             clearInterval(window.cycleGifsInterval);
 
             setTimeout(function(){
