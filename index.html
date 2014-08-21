@@ -163,9 +163,11 @@
 
             clearInterval(window.cycleGifsInterval);
 
-            setTimeout(function(){
+            var timeout = setTimeout(function(){
                 showRandomGif();
                 cycleGifs();
+
+                clearTimeout(timeout);
             }, 15000);
         }
 
@@ -206,8 +208,9 @@
             newimage.onload = function()
             {
                 // hide static transition now that image is loaded
-                setTimeout(function(){
+                var timeout = setTimeout(function(){
                     $('.static').hide();
+                    clearTimeout(timeout);
                 }, 150);
 
                 // resize/reposition image based on aspect ratio relative to viewport aspect to make sure it is always fullscreen and centered
